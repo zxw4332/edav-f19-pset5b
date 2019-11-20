@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Boxplots</title>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+</head>
+
+<body>
+
+    <div style="padding: 50px; float:left;">
+    </div>
+
+    <div id="chart" style="width: 400px; float:left;">
+        <h3>Create a boxplot</h3>
+        <p>Click in the center of the blue strip to add points.</p>
+    </div>
+
+    <div style="width: 400px; float: left;">
+        <h3>How to Read a Boxplot</h3>
+        <p>[add text here]</p>
+    </div>
+
+
+    <script type="text/javascript">
+        // helper to compare 2 arrays
+        function compareArrays(arr1, arr2) {
+
+            // first check lengths are the same
+            if (arr1.length != arr2.length) {
+                return false;
+            }
+
+            // next check that each element is the same
+            for (let i = 0; i < arr1.length; i++) {
+                if (arr1[i] !== arr2[i]) {
+                    return false;
+                }
+            }
+
+            // if got through the loop, 
+            //   then all elements are strictly equal
+            return true;
+        }
+
+        var svgHeight = 400;
+        var svgWidth = 400;
+
+        d3.select("#chart")
+            .append("svg")
+            .attr("width", svgWidth)
+            .attr("height", svgHeight);
+
+        var svg = d3.select("svg");
+
+        var boxplotData = [{
+                name: "Outer Container",
+                id: "bpOuter",
+                width: 150,
+                color: d3.rgb(221, 240, 244)
+            },
+            {
+                name: "Inner Container",
+                id: "bpInner",
+                width: 75,
+                color: d3.rgb(206, 231, 238)
+            },
+            {
+                name: "Boxplot",
+                id: "boxplot",
+                width: 50,
+                color: d3.rgb(139, 225, 214)
+            }
+        ]
+
+        svg.selectAll("rect")
+            .data(boxplotData)
+            .enter()
+            .append("rect")
+            .attr("id", d => d.id)
+            .attr("x", d => (svgWidth / 2) - (d.width / 2))
+            .attr("y", "50")
+            .attr("width", d => d.width)
+            .attr("height", "350")
+            .style("fill", d => d.color);
+
+        var boxplotInner = svg.select("#bpInner");
+        var boxplot = svg.select("#boxplot");
+
+        function modPoints() {
+            var circleData = d3.select("svg").selectAll("circle").data();
+            var mousePos = d3.mouse(this).map(d => Math.round(d));
+
+            circleData.push(mousePos)
+
+            var points = svg.selectAll('circle')
+                .data(circleData)
+
+            points.enter()
+                .append('circle')
+                .attr('cx', d => d[0])
+                .attr('cy', d => d[1])
+                .attr('r', 3)
+                .style('fill', 'black')
+                .merge(points);
+        }
+
+        boxplotInner.on("click", modPoints);
+        boxplot.on("click", modPoints);
+    </script>
+
+</body>
+
+</html>

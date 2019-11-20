@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Boxplots</title>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+</head>
+
+<body>
+
+    <div style="padding: 50px; float:left;">
+    </div>
+
+    <div id="chart" style="width: 400px; float:left;">
+        <h3>Create a boxplot</h3>
+        <p>Click in the center of the blue strip to add points.</p>
+        <input type="radio" name="points" value="add" checked="true"> Add points
+        <input type="radio" name="points" value="remove"> Remove points
+    </div>
+
+    <div style="width: 400px; float: left;">
+        <h3>How to Read a Boxplot</h3>
+        <p>[add text here]</p>
+    </div>
+
+
+    <script type="text/javascript">
+        // check if one point is within another with some margin
+        function withinMargins(inner, outer, margin) {
+
+            checkLeft = inner[0] < outer[0] + margin
+            checkRight = inner[0] > outer[0] - margin
+            checkTop = inner[1] > outer[1] - margin
+            checkBottom = inner[1] < outer[1] + margin
+
+            return checkLeft && checkRight && checkTop && checkBottom
+        }
+
+        var svgHeight = 400;
+        var svgWidth = 400;
+
+        d3.select("#chart")
+            .append("svg")
+            .attr("width", svgWidth)
+            .attr("height", svgHeight);
+
+        var svg = d3.select("svg");
+        var boxplotData = [
+
+            // outer container
+            {
+                id: "bpOuter",
+                width: 130,
+                height: 300,
+                color: d3.rgb(221, 240, 244)
+            },
+
+            // inner container
+            {
+                id: "bpInner",
+                width: 55,
+                height: 300,
+                color: d3.rgb(206, 231, 238)
+            },
+
+            // boxplot
+            {
+                id: "boxplot",
+                width: 55,
+                height: 50,
+                color: d3.rgb(139, 225, 214),
+            }
+        ]
+
+        svg.selectAll("rect")
+            .data(boxplotData)
+            .enter()
+            .append("rect")
+            .attr("id", d => d.id)
+            .attr("x", d => (svgWidth / 2) - (d.width / 2))
+            .attr("y", d => (svgHeight / 2) - (d.height / 2))
+            .attr("width", d => d.width)
+            .attr("height", d => d.height)
+            .attr("fill", d => d.color);
+
+
+
+        var boxplotInner = svg.select("#bpInner");
+        var boxplot = svg.select("#boxplot")
+            .attr("stroke", "black")
+            .attr("stroke-width", 2);
+
+        function getRemovePoints() {
+            var remove = d3.select('input[name="points"]:checked').property("value");
+            return remove === 'remove';
+        }
+
+        function modPoints() {
+            var circles = d3.select("svg").selectAll("circle");
+            var circleData = circles.data();
+            var mousePos = d3.mouse(this).map(d => Math.round(d));
+
+            // some comfort room - remove the closest point within margin
+            if (getRemovePoints()) {
+                for (let i = 0; i < circleData.length; i++) {
+                    const p = circleData[i];
+                    if (withinMargins(mousePos, p, 5)) {
+                        circles.filter((d, j) => i === j)
+                            .remove();
+                        break;
+                    }
+                }
+                return;
+            }
+
+            circleData.push(mousePos)
+
+            var points = svg.selectAll('circle')
+                .data(circleData)
+
+            points.enter()
+                .append('circle')
+                .attr('cx', d => d[0])
+                .attr('cy', d => d[1])
+                .attr('r', 3)
+                .style('fill', 'black')
+                .on("click", function () {
+                    // if remove - remove this point if clicked
+                    if (getRemovePoints()) {
+                        d3.select(this).remove();
+                    }
+                });
+
+            points.exit().remove();
+        }
+
+        boxplotInner.on("click", modPoints);
+        boxplot.on("click", modPoints);
+    </script>
+
+</body>
+
+</html>
